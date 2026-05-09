@@ -1,0 +1,28 @@
+---
+description: Play a sound and speak a message when the agent needs the user's physical action.
+alwaysApply: true
+---
+
+# Notify User When Action Required
+
+**When in doubt, notify.** Over-notifying is always better than the user missing a blocking prompt.
+
+Run this whenever the agent cannot proceed without the user doing something:
+
+```bash
+~/.cursor/scripts/notify.sh "<clear instruction>"
+```
+
+## Always Notify For
+
+- **Browser-based auth** (`aws sso login`, OAuth flows, any command that opens a browser for approval) — notify immediately after running the command, even if the browser opens automatically
+- **Device-code / SSO flows** — notify AFTER reading the code from terminal output; include the code in the message
+- **QA / manual verification** — notify AFTER listing the steps the user needs to perform
+- **Any blocking prompt or wait** — notify whenever the agent must idle until the user acts
+
+## Message Guidelines
+
+Messages are spoken aloud via TTS. Keep them short and actionable:
+
+- "AWS login needed. Approve in browser."
+- "Please check the browser for QA verification"

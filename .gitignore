@@ -1,0 +1,13 @@
+.DS_Store
+.cursor/plans/
+.cursor/agent-transcripts/
+tasks/
+tmp/
+.playwright-cli/
+.playwright-metamask-profile/
+email-qa.env
+.cursor/email-qa.env
+*.email-qa.env
+
+# Personal scratch (not part of the shared template)
+note.md

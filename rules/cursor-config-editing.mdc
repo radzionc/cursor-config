@@ -1,0 +1,20 @@
+---
+description: Edit shared Cursor config in the cursor-config repo, not in ~/.cursor.
+globs: 
+  - ~/.cursor/**
+  - .cursor/**
+---
+
+# Cursor Config Editing
+
+Shared Cursor configuration (agents, rules, skills, scripts, hooks) is managed by a **cursor-config repository**. The `sync.sh` script copies it one-way into `~/.cursor`, overwriting any direct edits.
+
+When editing shared config:
+
+1. Read `~/.cursor/.cursor-config-source` to find the cursor-config repo path.
+2. Edit files in the **cursor-config repo**, not in `~/.cursor`.
+3. Run `bash <repo-path>/sync.sh` to propagate changes.
+
+**Local-only config** (project rules, machine-specific rules) is written directly to `~/.cursor` or the project's `.cursor/` — these are not in cursor-config.
+
+If unsure whether something is shared or local: check if the file exists in the cursor-config repo. If it does, edit it there.

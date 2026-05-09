@@ -1,0 +1,26 @@
+From: auth@example.test
+To: qa-tester@localhost
+Subject: Your login code for QA
+Date: Thu, 29 Apr 2026 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="BOUND1"
+
+--BOUND1
+Content-Type: text/plain; charset="utf-8"
+
+Hello,
+
+Your OTP is 847291. Enter this verification code to continue.
+
+Alternatively use token: LOGIN-OTP-9FZ2
+
+Thank you.
+
+--BOUND1
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: attachment; filename="secret-token.txt"
+
+att-line-7a3c
+This file is a test artifact; do not execute.
+
+--BOUND1--

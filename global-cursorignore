@@ -1,0 +1,30 @@
+# Foreign AI tool configuration files.
+# Synced to cursor.general.globalCursorIgnoreList in settings.json.
+# Uses .gitignore pattern syntax.
+
+# Claude Code
+.claude/
+
+# OpenAI Codex
+.codex/
+AGENTS.md
+CLAUDE.md
+
+# Windsurf / Codeium
+.windsurfrules
+.codeiumrc
+
+# Continue
+.continue/
+
+# Aider
+.aider*
+
+# Bolt
+.bolt/
+
+# Sourcegraph Cody
+.sourcegraph/
+
+# GitHub Copilot
+.github/copilot-instructions.md
