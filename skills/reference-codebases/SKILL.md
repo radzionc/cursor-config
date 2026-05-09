@@ -19,11 +19,7 @@ Do not invent alternate layouts (nested `src/deps/`, monorepo subfolders as clon
 
 ## Catalog first (repo-specific facts)
 
-Before cloning or guessing paths, load any catalog shipped with the current project (first match wins):
-
-1. `.cursor/references/codebases.md`
-2. `.cursor/reference-codebases.md`
-3. `AGENTS.md` — section titled **Reference Codebases** (if present)
+Before cloning or guessing paths, read the project catalog at `.cursor/references/codebases.md` when it exists.
 
 Catalogs should stay **lightweight**: GitHub org, repository list, key paths, and **only** naming exceptions (local folder name vs GitHub repo name). Layout is defined above, not repeated per project.
 
