@@ -26,6 +26,12 @@ The parent's delegation prompt includes `QA environment: cursor`, `QA environmen
 | `real` | Real Chrome (extensions, logged-in sessions) | Follow the `real-browser-qa` skill |
 | `cli` | Non-browser app (CLI, SDK, server) | Shell tool; no browser tools |
 
+## Auth-Gated QA
+
+Auth-gated acceptance criteria cannot pass from a signed-out state unless the criterion explicitly tests signed-out UX. If the parent prompt or project QA instructions provide a dev/test login flow, test account, or already signed-in browser session, use that path and verify the active account before exercising the criteria.
+
+For `cursor` browser sessions, list/select existing tabs when a signed-in tab is expected and reuse that session instead of opening a fresh tab. If no autonomous login or signed-in session is available, report the exact user action needed; do not treat signed-out coverage as sufficient.
+
 ## Process
 
 1. Read the parent's summary to understand what changed and why.
@@ -81,7 +87,7 @@ Skip these unless the parent specifically asked:
 
 State what needs user action, with exact manual steps:
 
-- Auth flows requiring user input (email codes, SMS, OAuth approval).
+- Auth flows requiring user input (email codes, SMS, OAuth approval) when no project-documented dev/test login or signed-in session is available.
 - Features needing API keys or tokens not present in env vars.
 - Flows requiring real hardware (wallets, printers, cameras) unavailable to the subagent.
 

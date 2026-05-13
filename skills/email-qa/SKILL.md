@@ -161,5 +161,7 @@ Never commit API keys to shared cursor-config; project QA docs may name env vars
 
 ## Related
 
+- **send-email**: outbound SMTP sends from Cursor using the same local Gmail
+  app-password file when useful.
 - Project-specific flows: `.cursor/skills/project-qa/` in the product repo when present.
 - **quality-gates** / **qa** agent: OTP/magic-link email is **verifiable** when Mailpit, Gmail, Mailosaur, or fixtures are wired; only mark “Cannot verify” when no capture path was provided.

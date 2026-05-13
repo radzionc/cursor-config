@@ -148,7 +148,8 @@ sync_email_qa_env() {
   fi
 
   cat >"$repo_env_file" <<'EOF'
-# Local-only credentials for ~/.cursor/skills/email-qa/scripts/email_qa.py
+# Local-only credentials for Cursor email helpers.
+# Used by email-qa (IMAP reads) and send-email (SMTP sends).
 # This repo-root file is gitignored. sync.sh copies it to ~/.cursor/email-qa.env.
 EMAIL_QA_BACKEND=gmail
 EMAIL_QA_GMAIL_ADDRESS=your.qa.inbox@gmail.com
