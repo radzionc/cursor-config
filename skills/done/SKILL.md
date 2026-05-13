@@ -17,6 +17,7 @@ Do not use this for ordinary unfinished work. Use `handoff` when the goal is onl
 - **Reflect from the AI's pain**: capture what slowed agents down, increased risk, or made quality depend on luck.
 - **Sparse backlog**: zero improvement files is a valid outcome. Create files only when the issue is worth a future session.
 - **Evidence over taste**: prefer concrete session signals over generic refactors or "clean code" notes.
+- **Cost evidence over guilt**: only create model-spend improvements when the session shows avoidable expensive-model work and a practical cheaper path.
 - **Parent owns improvement files**: the finish subagent ships the branch and reports signals; only the parent creates or enriches `tasks/improve-*.md` after finish returns.
 
 ## Workflow
@@ -61,8 +62,18 @@ From the parent session context, list candidate improvements across these catego
 - **project-qa**: missing test accounts, canonical URLs, fixtures, QA steps, seeded states, or verification paths.
 - **code-quality**: duplication, confusing contracts, brittle module boundaries, missing shared components, or unsafe patterns noticed while working.
 - **workflow**: handoff gaps, costly context discovery, branch/PR friction, or subagent prompts that lacked needed context.
+- **cost-control**: avoidable main-model usage, context bloat, missing `composer-2` delegation, repeated high-token discovery, or tooling gaps that forced expensive-model work.
 
 Include subagent experience when available. If a finish, QA, code-review, or implementation subagent reports friction, treat that as first-class evidence.
+
+For cost-control candidates, use observable evidence from the session instead of trying to reconstruct exact billing unless usage data is already available. Examples of strong evidence:
+
+- Broad exploration, multi-file edits, retry loops, long-running checks, or log-heavy debugging stayed in the parent when a `composer-2` subagent could have owned the bulk work.
+- A built-in subagent was launched without `model: "composer-2"` or a custom agent was overridden with an explicit expensive model.
+- Large files, transcripts, terminal logs, screenshots, or generated outputs were repeatedly read into the parent without narrowing, summarizing, or delegating.
+- A missing script, MCP, fixture, QA doc, or project reference forced repeated manual discovery that would recur across future sessions.
+
+Reject cost-control candidates when the only evidence is that the main model was used, when delegation overhead would have exceeded the saved context, when no practical cheaper workflow is clear, or when the issue is already solved by following `orchestrate`.
 
 ### 3. Filter Hard
 
@@ -84,14 +95,17 @@ Usually create 0-3 items. More than 3 means the candidates need stricter filteri
 
 ### 4. Choose Create vs Enrich
 
-Use `tasks/improve-<descriptive-slug>.md` in the target repo.
+Use `tasks/improve-<descriptive-slug>.md` in the right destination repo:
+
+- **Project-specific** issues stay in the target repo: product code contracts, project QA fixtures, local tooling, unclear domain behavior, or repo-specific finish friction.
+- **Generic AI workflow** issues go in the shared cursor-config repo: reusable rules, skills, agents, hooks, MCP setup, orchestration discipline, context-management patterns, or model-spend optimizations that apply across projects. Read `~/.cursor/.cursor-config-source` to locate this repo when needed.
 
 Write or append improvement files only after the finish subagent returns. Local finish workflows may commit, push, merge, switch branches, or update `main`; treat the post-finish repo state as the source of truth.
 
-Search existing local improvement files first:
+Search existing improvement files in the chosen destination first:
 
 ```bash
-rg -n "<core keyword>|<related module>|<tool name>" <target-repo>/tasks/improve-*.md
+rg -n "<core keyword>|<related module>|<tool name>" <destination-repo>/tasks/improve-*.md
 ```
 
 - If an existing file describes the same underlying problem, append a new `## Observation - YYYY-MM-DD` section with the current evidence.
@@ -110,7 +124,7 @@ Use this template. Skip sections with no useful content.
 
 ## Category
 
-ai-infra | tooling | project-qa | code-quality | workflow
+ai-infra | tooling | project-qa | code-quality | workflow | cost-control
 
 ## Pain
 
