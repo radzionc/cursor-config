@@ -141,6 +141,55 @@ const defaultTimeoutMs = 30 * 60 * 1000
 const defaultPollMs = 15 * 1000
 const noChecksGraceMs = 60 * 1000
 
+const transientFetchMaxRetriesPerCycle = 8
+const transientFetchBaseDelayMs = 1_000
+const transientFetchMaxDelayMs = 30_000
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms)
+  })
+
+const isTransientGithubRequestError = (error: unknown): boolean => {
+  if (error instanceof AggregateError) {
+    return error.errors.some((item) => isTransientGithubRequestError(item))
+  }
+
+  if (error instanceof TypeError) {
+    return true
+  }
+
+  const message =
+    error instanceof Error ? error.message : String(error).toLowerCase()
+
+  if (message.includes('fetch failed')) {
+    return true
+  }
+
+  if (
+    /econnreset|etimedout|enotfound|eai_again|enetunreach|ehostunreach|socket/.test(
+      message
+    )
+  ) {
+    return true
+  }
+
+  if (/github (rest|graphql) (429|500|502|503|504|520)/i.test(message)) {
+    return true
+  }
+
+  if (
+    message.includes('github graphql errors:') &&
+    /rate limit|throttl|secondary rate|too many requests|submitted too quickly/.test(
+      message
+    )
+  ) {
+    return true
+  }
+
+  return false
+}
+
 const defaultAiReviewerLogins = [
   'coderabbitai',
   'github-copilot',
@@ -765,6 +814,50 @@ const printFailedChecks = (pullRequest: PullRequestState) => {
   }
 }
 
+const fetchPullRequestStateWithTransientRetries = async ({
+  token,
+  pullRequest,
+  deadlineMs,
+}: {
+  token: string
+  pullRequest: PullRequestRef
+  deadlineMs: number
+}): Promise<PullRequestState | null> => {
+  for (let attempt = 0; attempt < transientFetchMaxRetriesPerCycle; attempt++) {
+    try {
+      return await fetchPullRequestState({ token, pullRequest })
+    } catch (error) {
+      if (!isTransientGithubRequestError(error)) {
+        throw error
+      }
+
+      const note = error instanceof Error ? error.message : String(error)
+      const remainingMs = deadlineMs - Date.now()
+      const isLastAttempt = attempt === transientFetchMaxRetriesPerCycle - 1
+
+      if (isLastAttempt || remainingMs <= 0) {
+        console.warn(
+          `Transient GitHub error while polling checks (${note}); will retry after the poll interval.`
+        )
+        return null
+      }
+
+      const backoff = Math.min(
+        transientFetchMaxDelayMs,
+        transientFetchBaseDelayMs * 2 ** attempt
+      )
+      const delayMs = Math.min(backoff, Math.max(50, remainingMs - 1))
+
+      console.warn(
+        `Transient GitHub error while polling checks (${note}); retry ${attempt + 1}/${transientFetchMaxRetriesPerCycle} after ${Math.round(delayMs / 1000)}s`
+      )
+      await sleep(delayMs)
+    }
+  }
+
+  return null
+}
+
 const waitForChecks = async ({
   token,
   pullRequest,
@@ -780,7 +873,24 @@ const waitForChecks = async ({
   let lastStatus = ''
 
   while (Date.now() - startedAt < timeoutMs) {
-    const state = await fetchPullRequestState({ token, pullRequest })
+    const deadlineMs = startedAt + timeoutMs
+    const state = await fetchPullRequestStateWithTransientRetries({
+      token,
+      pullRequest,
+      deadlineMs,
+    })
+
+    if (!state) {
+      if (Date.now() - startedAt >= timeoutMs) {
+        console.error(
+          `Timed out after ${Math.round(timeoutMs / 1000)}s waiting for checks.`
+        )
+        process.exit(3)
+      }
+      await sleep(pollMs)
+      continue
+    }
+
     const checks = normalizeCheckContexts(state)
 
     if (
@@ -915,6 +1025,17 @@ const run = async () => {
 
   const token = getGithubToken()
   const pullRequest = await resolvePullRequest({ token, pr: args.pr })
+
+  if (args.command === 'wait-checks') {
+    await waitForChecks({
+      token,
+      pullRequest,
+      timeoutMs: args.timeoutMs,
+      pollMs: args.pollMs,
+    })
+    return
+  }
+
   const state = await fetchPullRequestState({ token, pullRequest })
 
   if (args.command === 'status') {
@@ -925,16 +1046,6 @@ const run = async () => {
   if (args.command === 'ready') {
     printStatus(state)
     process.exit(isReady(state) ? 0 : 1)
-  }
-
-  if (args.command === 'wait-checks') {
-    await waitForChecks({
-      token,
-      pullRequest,
-      timeoutMs: args.timeoutMs,
-      pollMs: args.pollMs,
-    })
-    return
   }
 
   if (args.command === 'failed-checks') {
